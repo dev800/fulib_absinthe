@@ -4,7 +4,7 @@ defmodule FulibAbsinthe.MixProject do
   def project do
     [
       app: :fulib_absinthe,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -38,7 +38,7 @@ defmodule FulibAbsinthe.MixProject do
 
   defp package do
     %{
-      files: ["lib", "priv", "mix.exs", "README.md", "config/config.exs"],
+      files: ["lib", "mix.exs", "README.md", "config/config.exs"],
       maintainers: ["happy"],
       licenses: ["BSD 3-Clause"],
       links: %{"Github" => "https://github.com/dev800/fulib_absinthe"}
