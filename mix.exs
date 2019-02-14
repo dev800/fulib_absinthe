@@ -8,7 +8,15 @@ defmodule FulibAbsinthe.MixProject do
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      package: package()
+      package: package(),
+      description: "Lib for elixir",
+      source_url: "https://github.com/dev800/fulib_absinthe",
+      homepage_url: "https://github.com/dev800/fulib_absinthe",
+      package: package(),
+      docs: [
+        extras: ["README.md"],
+        main: "readme"
+      ]
     ]
   end
 
