@@ -4,7 +4,7 @@ defmodule FulibAbsinthe.MixProject do
   def project do
     [
       app: :fulib_absinthe,
-      version: "0.1.2",
+      version: "0.1.4",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -23,7 +23,7 @@ defmodule FulibAbsinthe.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :fulib]
+      extra_applications: [:logger, :fulib, :db_connection, :postgrex]
     ]
   end
 
@@ -32,7 +32,11 @@ defmodule FulibAbsinthe.MixProject do
     [
       {:absinthe_plug, "~> 1.4"},
       {:fulib, "~> 0.1"},
-      {:ex_doc, "~> 0.0", only: :dev, runtime: false}
+      {:grpc, "~> 0.3"},
+      {:gun, "~> 1.3"},
+      {:postgrex, ">= 0.0.0"},
+      {:ex_doc, "~> 0.0", only: :dev, runtime: false},
+      {:remote_ip, "~> 0.1"}
     ]
   end
 

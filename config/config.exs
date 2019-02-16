@@ -2,7 +2,9 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
-import_config "../deps/fulib/config/config.exs"
+if File.exists?("#{__DIR__}/../deps/fulib/config/config.exs") do
+  import_config "#{__DIR__}/../deps/fulib/config/config.exs"
+end
 
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
