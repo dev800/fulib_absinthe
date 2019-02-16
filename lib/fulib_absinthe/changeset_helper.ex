@@ -12,10 +12,10 @@ defmodule FulibAbsinthe.ChangesetHelper do
           iex> put_error(changeset, :name, msgid, validation: :required)
           iex> put_error(changeset, {:error, reason}, _message, opts)
           iex> put_error(changeset, {:error, %{__struct__: _} = error}, msgid, opts)
-          iex> put_error(changeset, {:error, key, reason, msgid}, message, opts)
-          iex> put_error(changeset, {:error, key, reason, {msgid, _bindings}}, _message, opts)
-          iex> put_error(changeset, {:error, key, reason}, _message, opts)
-          iex> put_error(changeset, key, msgid, opts)
+          iex> put_error(changeset, {:error, field_key, reason, msgid}, message, opts)
+          iex> put_error(changeset, {:error, field_key, reason, {msgid, _bindings}}, _message, opts)
+          iex> put_error(changeset, {:error, field_key, reason}, _message, opts)
+          iex> put_error(changeset, field_key, msgid, opts)
           """
           def put_error(changeset, error, message \\ "Process fail", opts \\ [])
 
@@ -26,8 +26,8 @@ defmodule FulibAbsinthe.ChangesetHelper do
                 _default_message,
                 _opts
               ) do
-            Enum.reduce(errors, changeset, fn {key, {message, opts}}, changeset ->
-              put_error(changeset, key, message, opts)
+            Enum.reduce(errors, changeset, fn {field_key, {message, opts}}, changeset ->
+              put_error(changeset, field_key, message, opts)
             end)
           end
 
@@ -56,7 +56,7 @@ defmodule FulibAbsinthe.ChangesetHelper do
               changeset,
               {
                 :error,
-                Fulib.get(extends, :key, :base),
+                Fulib.get(extends, :field_key, :base),
                 reason,
                 {msgid, Fulib.get(extends, :bindings, [])}
               },
@@ -65,28 +65,28 @@ defmodule FulibAbsinthe.ChangesetHelper do
             )
           end
 
-          # put_error(changeset, {:error, key, reason}, default_message, opts)
-          def put_error(changeset, {:error, key, reason}, _message, opts) do
+          # put_error(changeset, {:error, field_key, reason}, default_message, opts)
+          def put_error(changeset, {:error, field_key, reason}, _message, opts) do
             put_error(
               changeset,
-              key,
+              field_key,
               reason |> Fulib.to_s(),
               opts |> Fulib.reverse_merge(validation: reason)
             )
           end
 
-          # put_error(changeset, {:error, key, reason, {msgid, bindings}}, default_message, opts)
-          def put_error(changeset, {:error, key, reason, {msgid, bindings}}, _message, opts) do
+          # put_error(changeset, {:error, field_key, reason, {msgid, bindings}}, default_message, opts)
+          def put_error(changeset, {:error, field_key, reason, {msgid, bindings}}, _message, opts) do
             put_error(
               changeset,
-              key,
+              field_key,
               msgid,
               opts |> Fulib.reverse_merge(bindings) |> Fulib.reverse_merge(validation: reason)
             )
           end
 
-          def put_error(changeset, {:error, key, reason, msgid}, message, opts) do
-            put_error(changeset, {:error, key, reason, {msgid, []}}, message, opts)
+          def put_error(changeset, {:error, field_key, reason, msgid}, message, opts) do
+            put_error(changeset, {:error, field_key, reason, {msgid, []}}, message, opts)
           end
 
           def put_error(changeset, {:error, %{__struct__: _} = error}, msgid, opts) do
@@ -102,8 +102,8 @@ defmodule FulibAbsinthe.ChangesetHelper do
             )
           end
 
-          def put_error(changeset, key, msgid, bindings) do
-            Ecto.Changeset.add_error(changeset, key, msgid, bindings)
+          def put_error(changeset, field_key, msgid, bindings) do
+            Ecto.Changeset.add_error(changeset, field_key, msgid, bindings)
           end
         end
       )
