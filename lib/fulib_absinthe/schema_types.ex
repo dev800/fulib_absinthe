@@ -28,8 +28,13 @@ defmodule FulibAbsinthe.SchemaTypes do
     serialize(&Fulib.to_s(&1))
   end
 
+  scalar :json, description: "json" do
+    parse(&{:ok, Fulib.from_json(Fulib.get(&1, :value))})
+    serialize(&Fulib.to_json(&1))
+  end
+
   scalar :csl, description: "Comma-Separated List" do
-    parse(&{:ok, String.split(Fulib.get(&1, :value), ",", trim: true)})
+    parse(&{:ok, String.split(Fulib.get(&1, :value), [",", "，", "\n"], trim: true)})
     serialize(&Enum.join(&1, ","))
   end
 
