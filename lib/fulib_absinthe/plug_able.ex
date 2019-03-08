@@ -1,5 +1,5 @@
 defmodule FulibAbsinthe.PlugAble do
-  defmacro __using__(_opts \\ []) do
+  defmacro __using__(opts \\ []) do
     quote do
       @behaviour Plug
       import Plug.Conn
@@ -7,7 +7,15 @@ defmodule FulibAbsinthe.PlugAble do
 
       alias Absinthe.Plug.Request
 
+      opts = unquote(opts)
+
       @raw_options [:analyze_complexity, :max_complexity]
+
+      Module.register_attribute(__MODULE__, :call_before, accumulate: false)
+      Module.put_attribute(__MODULE__, :call_before, opts[:call_before])
+
+      Module.register_attribute(__MODULE__, :call_after, accumulate: false)
+      Module.put_attribute(__MODULE__, :call_after, opts[:call_after])
 
       @type function_name :: atom
 
@@ -126,37 +134,46 @@ defmodule FulibAbsinthe.PlugAble do
           """
           @spec call(Plug.Conn.t(), map) :: Plug.Conn.t() | no_return
           def call(conn, config) do
+            conn = conn |> Plug.Conn.fetch_session()
+
+            conn =
+              if @call_before do
+                @call_before.call(conn)
+              else
+                conn
+              end
+
             config = update_config(conn, config)
             {conn, result} = conn |> execute(config)
 
-            case result do
-              {:input_error, msg} ->
-                conn
-                |> encode(400, error_result(msg), config)
+            conn =
+              case result do
+                {:input_error, msg} ->
+                  conn |> encode(400, error_result(msg), config)
 
-              {:ok, %{"subscribed" => topic}} ->
-                conn
-                |> subscribe(topic, config)
+                {:ok, %{"subscribed" => topic}} ->
+                  conn |> subscribe(topic, config)
 
-              {:ok, %{data: _} = result} ->
-                conn
-                |> encode(200, result, config)
+                {:ok, %{data: _} = result} ->
+                  conn |> encode(200, result, config)
 
-              {:ok, %{errors: _} = result} ->
-                conn
-                |> encode(200, result, config)
+                {:ok, %{errors: _} = result} ->
+                  conn |> encode(200, result, config)
 
-              {:ok, result} when is_list(result) ->
-                conn
-                |> encode(200, result, config)
+                {:ok, result} when is_list(result) ->
+                  conn |> encode(200, result, config)
 
-              {:error, {:http_method, text}, _} ->
-                conn
-                |> encode(405, error_result(text), config)
+                {:error, {:http_method, text}, _} ->
+                  conn |> encode(405, error_result(text), config)
 
-              {:error, error, _} when is_binary(error) ->
-                conn
-                |> encode(500, error_result(error), config)
+                {:error, error, _} when is_binary(error) ->
+                  conn |> encode(500, error_result(error), config)
+              end
+
+            if @call_after do
+              @call_after.call(conn)
+            else
+              conn
             end
           end
 

@@ -150,10 +150,7 @@ defmodule FulibAbsinthe.ResolverHelper do
           end
 
           def get_current_user(%Absinthe.Resolution{} = resolution) do
-            resolution
-            |> Fulib.get(:context, %{})
-            |> Fulib.get(:private, %{})
-            |> Fulib.get(:current_user)
+            resolution.context |> Fulib.get(:current_user)
           end
 
           def get_current_user(_), do: nil

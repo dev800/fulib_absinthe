@@ -5,11 +5,19 @@ defmodule FulibAbsinthe.PlugGraphiQLAble do
 
   def graphiql_template_path, do: @graphiql_template_path
 
-  defmacro __using__(_opts \\ []) do
+  defmacro __using__(opts \\ []) do
     quote do
       require EEx
 
+      opts = unquote(opts)
+
       @graphiql_template_path FulibAbsinthe.PlugGraphiQLAble.graphiql_template_path()
+
+      Module.register_attribute(__MODULE__, :call_before, accumulate: false)
+      Module.put_attribute(__MODULE__, :call_before, opts[:call_before])
+
+      Module.register_attribute(__MODULE__, :call_after, accumulate: false)
+      Module.put_attribute(__MODULE__, :call_after, opts[:call_after])
 
       EEx.function_from_file(
         :defp,
@@ -73,9 +81,25 @@ defmodule FulibAbsinthe.PlugGraphiQLAble do
 
           @doc false
           def call(conn, config) do
-            case html?(conn) do
-              true -> do_call(conn, config)
-              _ -> Absinthe.Plug.call(conn, config)
+            conn = conn |> Plug.Conn.fetch_session()
+
+            conn =
+              if @call_before do
+                @call_before.call(conn)
+              else
+                conn
+              end
+
+            conn =
+              case html?(conn) do
+                true -> do_call(conn, config)
+                _ -> Absinthe.Plug.call(conn, config)
+              end
+
+            if @call_after do
+              @call_after.call(conn)
+            else
+              conn
             end
           end
 
