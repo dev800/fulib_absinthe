@@ -8,6 +8,22 @@ defmodule FulibAbsinthe.ChangesetHelper do
         quote do
           import ShorterMaps
 
+          def try(changeset, start_fn, ok_fn) do
+            try do
+              start_fn.()
+              |> case do
+                {:ok, data} ->
+                  ok_fn.(data)
+
+                error ->
+                  put_error(changeset, error)
+              end
+            catch
+              :error, error ->
+                put_error(changeset, error)
+            end
+          end
+
           @doc """
           iex> put_error(changeset, :name, msgid, validation: :required)
           iex> put_error(changeset, {:error, reason}, _message, opts)
@@ -51,7 +67,12 @@ defmodule FulibAbsinthe.ChangesetHelper do
             put_error(changeset, :base, "constraint error: #{constraint}", validation: type)
           end
 
-          def put_error(changeset, {:error, reason, %{msgid: msgid} = extends}, default_message, opts) do
+          def put_error(
+                changeset,
+                {:error, reason, %{msgid: msgid} = extends},
+                default_message,
+                opts
+              ) do
             put_error(
               changeset,
               {
