@@ -7,19 +7,32 @@ defmodule FulibAbsinthe.ChangesetHelper do
         __MODULE__,
         quote do
           import ShorterMaps
+          require Logger
+
+          def try(changeset, start_fn) do
+            __MODULE__.try(changeset, start_fn, fn changeset, data ->
+              changeset |> Fulib.Form.put_entries(data)
+            end)
+          end
 
           def try(changeset, start_fn, ok_fn) do
             try do
-              start_fn.()
-              |> case do
-                {:ok, data} ->
-                  ok_fn.(data)
+              if changeset.valid? do
+                changeset
+                |> start_fn.()
+                |> case do
+                  {:ok, data} ->
+                    ok_fn.(changeset, data)
 
-                error ->
-                  put_error(changeset, error)
+                  error ->
+                    put_error(changeset, error)
+                end
+              else
+                changeset
               end
             catch
               :error, error ->
+                Logger.error(__STACKTRACE__ |> inspect())
                 put_error(changeset, error)
             end
           end
@@ -34,6 +47,16 @@ defmodule FulibAbsinthe.ChangesetHelper do
           iex> put_error(changeset, field_key, msgid, opts)
           """
           def put_error(changeset, error, message \\ "Process fail", opts \\ [])
+
+          def put_error(changeset, [], _message, _opts) do
+            changeset
+          end
+
+          def put_error(changeset, [error | errors], message, opts) do
+            changeset
+            |> put_error(error, message, opts)
+            |> put_error(errors, message, opts)
+          end
 
           # put_error(changeset, %Ecto.InvalidChangesetError{}, default_message, opts)
           def put_error(

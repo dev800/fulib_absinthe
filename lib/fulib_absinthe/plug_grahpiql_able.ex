@@ -81,7 +81,14 @@ defmodule FulibAbsinthe.PlugGraphiQLAble do
 
           @doc false
           def call(conn, config) do
-            conn = conn |> Plug.Conn.fetch_session()
+            conn =
+              case Map.fetch(conn.private, :plug_session_fetch) do
+                {:ok, _} ->
+                  conn |> Plug.Conn.fetch_session()
+
+                _ ->
+                  conn
+              end
 
             conn =
               if @call_before do
