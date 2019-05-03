@@ -6,6 +6,16 @@ defmodule FulibAbsinthe.ConnHelper do
       Module.eval_quoted(
         __MODULE__,
         quote do
+          def redirect!(conn, url) do
+            html = Plug.HTML.html_escape(url)
+            body = "<html><body>You are being <a href=\"#{html}\">redirected</a>.</body></html>"
+
+            conn
+            |> Plug.Conn.put_resp_header("location", url)
+            |> Plug.Conn.send_resp(conn.status || 302, body)
+            |> Plug.Conn.halt
+          end
+
           def get_remote_ip(%Absinthe.Resolution{context: context}) do
             get_remote_ip(context)
           end

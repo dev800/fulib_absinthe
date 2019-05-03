@@ -16,7 +16,7 @@ defmodule FulibAbsinthe.ChangesetHelper do
           end
 
           def try(changeset, start_fn, ok_fn) do
-            try do
+            call_fn = fn ->
               if changeset.valid? do
                 changeset
                 |> start_fn.()
@@ -30,11 +30,17 @@ defmodule FulibAbsinthe.ChangesetHelper do
               else
                 changeset
               end
-            catch
-              :error, error ->
-                Logger.error(__STACKTRACE__ |> inspect())
-                put_error(changeset, error)
             end
+
+            call_fn.()
+
+            # try do
+            #   call_fn.()
+            # catch
+            #   :error, error ->
+            #     Logger.error(__STACKTRACE__ |> inspect())
+            #     put_error(changeset, error)
+            # end
           end
 
           @doc """

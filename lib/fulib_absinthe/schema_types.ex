@@ -83,6 +83,34 @@ defmodule FulibAbsinthe.SchemaTypes do
     end
   end
 
+  defmacro field_enumables(field_key, opts \\ []) do
+    quote do
+      field unquote(:"#{field_key}"), list_of(:option), unquote(opts) do
+        resolve(fn parent, _params, _resolution ->
+          if parent do
+            field_key = unquote(field_key)
+            type_module = parent.__struct__.__changeset__ |> Fulib.get(field_key)
+
+            options =
+              parent
+              |> Fulib.get(field_key)
+              |> Kernel.||([])
+              |> Enum.map(fn value ->
+                %{
+                  key: value,
+                  name: type_module.get_human(value)
+                }
+              end)
+
+            {:ok, options}
+          else
+            {:ok, []}
+          end
+        end)
+      end
+    end
+  end
+
   defmacro field_datetime(field_key, opts \\ []) do
     quote do
       field unquote(field_key), :string do

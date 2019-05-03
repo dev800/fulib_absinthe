@@ -1,4 +1,4 @@
-defmodule FulibAbsinthe.HtmlHelper do
+defmodule FulibAbsinthe.HTMLHelper do
   defmacro __using__(opts \\ []) do
     quote do
       opts = unquote(opts)
@@ -29,6 +29,7 @@ defmodule FulibAbsinthe.HtmlHelper do
                     |> Jason.decode!()
                   end)
                   |> get_in(decode_path(path))
+                  |> Kernel.||(path)
 
                 @routers.static_path(endpoint, url)
             end
