@@ -160,18 +160,10 @@ defmodule FulibAbsinthe.SchemaHelpers do
             limit = params |> Fulib.get(:limit, 10) |> Fulib.to_i()
             page_number = params |> Fulib.get(:page_number, 1) |> Fulib.to_i()
             offset = limit * (page_number - 1)
-
-            page_style =
-              params
-              |> Fulib.get(:page_style, :count)
-              |> Fulib.to_atom()
-              |> case do
-                :all -> :all
-                _ -> :count
-              end
+            pageable = params |> Fulib.get(:pageable, true)
+            page_style = :count
 
             # TODO: 需要增加order by的排序支持
-
             subquery =
               Ecto.Query.from(t in model_module,
                 where: field(t, ^right) in ^values,
@@ -190,18 +182,18 @@ defmodule FulibAbsinthe.SchemaHelpers do
               )
               |> query_handle_fn.(opts)
 
-            if page_style == :all do
+            if pageable do
               Ecto.Query.from(r1 in model_module,
                 join: r2 in subquery(subquery),
                 on: field(r1, ^left) == r2.left,
+                where: r2.rank <= ^(offset + limit),
+                where: r2.rank > ^offset,
                 select: %{record: r1, rank: r2.rank, total_entries: r2.total_entries}
               )
             else
               Ecto.Query.from(r1 in model_module,
                 join: r2 in subquery(subquery),
                 on: field(r1, ^left) == r2.left,
-                where: r2.rank <= ^(offset + limit),
-                where: r2.rank > ^offset,
                 select: %{record: r1, rank: r2.rank, total_entries: r2.total_entries}
               )
             end
@@ -221,25 +213,22 @@ defmodule FulibAbsinthe.SchemaHelpers do
               entries = records |> Enum.map(fn %{record: record} -> record end)
 
               paginater =
-                case page_style do
-                  :all ->
-                    %Fulib.Paginater.AllResult{
-                      entries: entries
-                    }
+                if pageable do
+                  total_pages = Fulib.Paginater.Util.get_total_pages(total_entries, limit: limit)
 
-                  _ ->
-                    total_pages =
-                      Fulib.Paginater.Util.get_total_pages(total_entries, limit: limit)
-
-                    %Fulib.Paginater.CountResult{
-                      entries: entries,
-                      limit: limit,
-                      offset: offset,
-                      per_page: limit,
-                      page_number: page_number,
-                      total_entries: total_entries,
-                      total_pages: total_pages
-                    }
+                  %Fulib.Paginater.CountResult{
+                    entries: entries,
+                    limit: limit,
+                    offset: offset,
+                    per_page: limit,
+                    page_number: page_number,
+                    total_entries: total_entries,
+                    total_pages: total_pages
+                  }
+                else
+                  %Fulib.Paginater.AllResult{
+                    entries: entries
+                  }
                 end
 
               {right_id, paginater}

@@ -134,17 +134,25 @@ defmodule FulibAbsinthe.SchemaTypes do
     end
   end
 
+  @desc "默认响应"
   object :response do
     field(:status, :string, description: "状态")
     field(:message, :string, description: "提示原因")
     field(:errors, list_of(:error), description: "错误域")
   end
 
+  @desc "错误对象"
   object :error do
     field(:key, :string, description: "字段Key")
     field(:field, :string, description: "字段名称")
     field(:logic, :string, description: "业务逻辑状态")
     field(:message, :string, description: "提示消息")
+  end
+
+  @desc "Money类型"
+  object :money do
+    field(:amount, :integer, description: "数量")
+    field(:currency, :string, description: "货币单位")
   end
 
   @desc "权限"
