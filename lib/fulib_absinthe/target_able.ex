@@ -13,6 +13,14 @@ defmodule FulibAbsinthe.TargetAble do
             Module.concat(@engine_module, "TargetLogic").get_polymorphic_by_module(__MODULE__)
           end
 
+          def get_polymorphic_key(source) do
+            [
+              source.__struct__.get_polymorphic_value(),
+              source.id
+            ]
+            |> Enum.join("_")
+          end
+
           def get_polymorphic_name() do
             case get_polymorphic() do
               {_value, name, _module} ->
