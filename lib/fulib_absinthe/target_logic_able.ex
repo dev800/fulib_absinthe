@@ -44,6 +44,29 @@ defmodule FulibAbsinthe.TargetLogicAble do
           def target_module_names, do: @target_module_names
 
           def target_module_values, do: @target_module_values
+
+          def to_params(source, field \\ :target) do
+            source_module = source.__struct__
+
+            %{
+              :"#{field}_id" => source.id,
+              :"#{field}_type" => source_module.get_polymorphic_value(),
+              :"#{field}_key" => source_module.get_polymorphic_key(source)
+            }
+          end
+
+          def normalize_params(params, field \\ :target) do
+            if source = params[field] do
+              source_module = source.__struct__
+
+              params
+              |> Fulib.put(:"#{field}_id", source.id)
+              |> Fulib.put(:"#{field}_type", source_module.get_polymorphic_value())
+              |> Fulib.put(:"#{field}_key", source_module.get_polymorphic_key(source))
+            else
+              params
+            end
+          end
         end
       )
     end
