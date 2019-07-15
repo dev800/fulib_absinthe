@@ -228,6 +228,10 @@ defmodule FulibAbsinthe.SchemaTypes do
         field(:total_entries, :integer, description: "总条数")
         field(:total_pages, :integer, description: "总页数")
         field(:entries, list_of(unquote(entry_type)), description: "数据对象")
+        field(:next_cursor, :string, description: "下一页的分页指针")
+        field(:pre_cursor, :string, description: "上一页的分页指针")
+        field(:is_first, :boolean, description: "是否是第一页")
+        field(:is_last, :boolean, description: "是否是最后一页")
         field(:status, :string, description: "状态")
         field(:message, :string, description: "操作成功")
         field(:logic, :string, description: "业务逻辑状态")
@@ -244,6 +248,8 @@ defmodule FulibAbsinthe.SchemaTypes do
             unquote(Fulib.to_atom(["paginater", "_", Fulib.to_s(field_type)])) do
         arg(:offset, :integer, description: "偏移量")
         arg(:limit, :integer, description: "每页条数")
+        arg(:next_cursor, :string, description: "下一页的分页指针")
+        arg(:pre_cursor, :string, description: "上一页的分页指针")
         arg(:page_number, :integer, description: "当前页数")
         arg(:page_style, :atom, description: "分页类型")
 

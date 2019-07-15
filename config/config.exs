@@ -2,9 +2,15 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
-if File.exists?("#{__DIR__}/../deps/fulib/config/config.exs") do
-  import_config "#{__DIR__}/../deps/fulib/config/config.exs"
-end
+# Enum.each(~w(fulib), fn app ->
+#   if File.exists?("#{__DIR__}/../deps/#{app}/config/config.exs") do
+#     import_config "#{__DIR__}/../deps/#{app}/config/config.exs"
+#   else
+#     if File.exists?("#{__DIR__}/../../#{app}/config/config.exs") do
+#       import_config "#{__DIR__}/../../#{app}/config/config.exs"
+#     end
+#   end
+# end)
 
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
