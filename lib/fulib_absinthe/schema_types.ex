@@ -29,8 +29,16 @@ defmodule FulibAbsinthe.SchemaTypes do
   end
 
   scalar :json, description: "json" do
-    parse(&{:ok, Fulib.from_json(Fulib.get(&1, :value))})
-    serialize(&Fulib.to_json(&1))
+    parse(
+      &{:ok,
+       Fulib.get(&1, :value)
+       |> Fulib.from_json(keys: :atoms)
+       |> Fulib.Map.recase_keys_deep!(case: :snake)}
+    )
+
+    serialize(fn data ->
+      data |> Fulib.Map.recase_keys_deep!(case: :camel) |> Fulib.to_json()
+    end)
   end
 
   scalar :csl, description: "Comma-Separated List" do
