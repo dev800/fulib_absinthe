@@ -217,6 +217,8 @@ defmodule FulibAbsinthe.SchemaHelpers do
                   total_pages = Fulib.Paginater.Util.get_total_pages(total_entries, limit: limit)
 
                   %Fulib.Paginater.CountResult{
+                    is_first: page_number <= 1,
+                    is_last: page_number >= total_pages,
                     entries: entries,
                     limit: limit,
                     offset: offset,
