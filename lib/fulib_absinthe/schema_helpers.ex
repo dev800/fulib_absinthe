@@ -156,7 +156,8 @@ defmodule FulibAbsinthe.SchemaHelpers do
             left = opts[:left]
             preload = Fulib.get(opts, :preload, [])
             query_handle_fn = opts[:query_handle_fn] || fn query, _opts -> query end
-            opts = opts |> Keyword.drop([:preload, :query_handle_fn])
+            subquery_handle_fn = opts[:subquery_handle_fn]
+            opts = opts |> Keyword.drop([:preload, :query_handle_fn, :subquery_handle_fn])
             limit = params |> Fulib.get(:limit, 10) |> Fulib.to_i()
             page_number = params |> Fulib.get(:page_number, 1) |> Fulib.to_i()
             offset = limit * (page_number - 1)
@@ -165,22 +166,32 @@ defmodule FulibAbsinthe.SchemaHelpers do
 
             # TODO: 需要增加order by的排序支持
             subquery =
-              Ecto.Query.from(t in model_module,
-                where: field(t, ^right) in ^values,
-                select: %{
-                  left: field(t, ^left),
-                  right: field(t, ^right),
-                  total_entries:
-                    fragment("COUNT(?) OVER(PARTITION BY ?)", field(t, ^left), field(t, ^right)),
-                  rank:
-                    fragment(
-                      "RANK() OVER(PARTITION BY ? ORDER BY ? DESC)",
-                      field(t, ^right),
-                      field(t, ^left)
-                    )
-                }
-              )
+              Ecto.Query.from(t in model_module, where: field(t, ^right) in ^values)
               |> query_handle_fn.(opts)
+              |> Fulib.if_call(true, fn query ->
+                if subquery_handle_fn do
+                  query |> subquery_handle_fn.(opts)
+                else
+                  Ecto.Query.from(t in query,
+                    select: %{
+                      left: field(t, ^left),
+                      right: field(t, ^right),
+                      total_entries:
+                        fragment(
+                          "COUNT(?) OVER(PARTITION BY ?)",
+                          field(t, ^left),
+                          field(t, ^right)
+                        ),
+                      rank:
+                        fragment(
+                          "RANK() OVER(PARTITION BY ? ORDER BY ? DESC)",
+                          field(t, ^right),
+                          field(t, ^left)
+                        )
+                    }
+                  )
+                end
+              end)
 
             if pageable do
               Ecto.Query.from(r1 in model_module,
