@@ -197,6 +197,12 @@ defmodule FulibAbsinthe.SchemaTypes do
     field(:key, :string, description: "Key")
   end
 
+  @desc "枚举类型"
+  object :enum_type do
+    field(:name, :string, description: "名称")
+    field(:key, :atom, description: "Key")
+  end
+
   defmacro object_response_empty(response_type) do
     quote do
       object_response(unquote(:"#{response_type}")) do

@@ -36,6 +36,16 @@ defmodule FulibAbsinthe.ResolverHelper do
             {:ok, entries |> Fulib.take(entry_keys |> Fulib.to_array())} |> render()
           end
 
+          def enum_types_resolve(type_module) do
+            fn _parent, _params, _resolution ->
+              {:ok,
+               type_module.select_options()
+               |> Enum.map(fn [name, key | _] ->
+                 %{key: key, name: name}
+               end)}
+            end
+          end
+
           @doc """
           渲染resolver结果，进行标准化
 
