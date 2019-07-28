@@ -45,6 +45,10 @@ defmodule FulibAbsinthe.SchemaHelpers do
             fn parent, params, resolution ->
               current_user = resolution |> @resolver_helper.get_current_user()
 
+              results_handle_fn =
+                opts[:results_handle_fn] ||
+                  fn results, _parent, _params, _resolution -> results end
+
               args = args ++ Fulib.reverse_merge(opts, params: params, current_user: current_user)
 
               case left do
@@ -55,12 +59,18 @@ defmodule FulibAbsinthe.SchemaHelpers do
                       |> Enum.map(fn key -> batch_results |> Fulib.get(key) end)
                       |> Fulib.compact()
 
-                    {:ok, batch_entries}
+                    {:ok, results_handle_fn.(batch_entries, parent, params, resolution)}
                   end)
 
                 left ->
                   batch({helper_module, fun, args}, Fulib.get(parent, left), fn batch_results ->
-                    {:ok, batch_results |> Map.get(Fulib.get(parent, left))}
+                    {:ok,
+                     results_handle_fn.(
+                       batch_results |> Map.get(Fulib.get(parent, left)),
+                       parent,
+                       params,
+                       resolution
+                     )}
                   end)
               end
             end
@@ -68,6 +78,16 @@ defmodule FulibAbsinthe.SchemaHelpers do
 
           def preload(left, model_module, opts),
             do: preload(left, {model_module, model_module.repo_primary_key()}, opts)
+
+          def results_handle_fn(opts) do
+            fn entries, parent, params, resolution ->
+              if opts[:results_handle_fn] do
+                opts[:results_handle_fn].(entries, parent, params, resolution)
+              else
+                entries
+              end
+            end
+          end
 
           @doc """
           ## opts
